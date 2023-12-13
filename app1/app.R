@@ -110,3 +110,52 @@ ui <- dashboardPage(
     )
   )
 )
+
+# Crear el servidor
+server <- function(input, output, session) {
+  
+  datos_reactivos <- reactive({
+    read_csv("Datos/datos_empleo_genero.csv")
+  })
+  
+  grafico_dispersion <- eventReactive(input$enter_scatter, {
+    plot_ly(data = datos_reactivos(), x = ~get(input$VariableX), y = ~get(input$VariableY), type = "scatter", mode = "markers") |>
+      layout(title = "Gráfico de Dispersión",
+             xaxis = list(title = input$VariableX),
+             yaxis = list(title = input$VariableY))
+  })
+  
+  output$scatter_plot <- renderPlotly({
+    grafico_dispersion()
+  })
+  
+  grafico_lineas <- eventReactive(input$enter_line_chart, {
+    ggplot(datos_reactivos(), aes_string(x = "anyo", y = input$VariableLineas, color = input$VariableLineas)) +
+      geom_line() +
+      labs(title = "Gráfico de líneas") +
+      theme_minimal()
+  })
+  
+  output$line_chart <- renderPlot({
+    grafico_lineas()
+  })
+  
+  grafico_puntos <- eventReactive(input$enter_point_chart, {
+    ggplot(datos_reactivos(), aes_string(x = input$VariablePuntos, y = input$VariablePuntos, color = input$VariablePuntos)) +
+      geom_point() +
+      labs(title = "Gráfico de puntos") +
+      theme_minimal()
+  })
+  
+  output$point_chart <- renderPlot({
+    grafico_puntos()
+  })
+  
+  output$datatable <- DT::renderDataTable({
+    datos_reactivos() |> 
+      select(input$columna_seleccionada)
+  }, options = list(columnDefs = list(list(className = 'dt-center', targets = "_all"))))
+}
+
+# Ejecutar la aplicación
+shinyApp(ui, server)
