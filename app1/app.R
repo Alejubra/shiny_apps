@@ -6,6 +6,10 @@ library(ggplot2)
 library(DT)
 library(plotly)
 
+datos_reactivos <- reactive({
+  read_csv("Datos/datos_empleo_genero.csv")
+})
+
 # Crear la interfaz de usuario
 ui <- dashboardPage(
   skin = "purple",
